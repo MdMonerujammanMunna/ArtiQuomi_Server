@@ -30,6 +30,11 @@ async function run() {
         const PromptsCollections = database.collection("Prompts");
         const ReviewsCollections = database.collection("Reviews");
 
+        // Get 6 Prompts api for show home page
+        app.get('/user/heroPrompts', async (req, res) => {
+            const response = await PromptsCollections.find({}).limit(6).toArray();
+            res.send(response);
+        })
         // For add Prompts api call
         app.post('/user/addPrompts', async (req, res) => {
             const prompts = req.body;
@@ -102,7 +107,6 @@ async function run() {
                 }
 
                 res.send(review);
-                console.log(review);
             } catch (error) {
                 console.log(error);
                 res.status(500).send({
@@ -111,8 +115,36 @@ async function run() {
             }
         });
 
+        // Get you created prompts
+        app.get("/user/getUserPrompts/:id", async (req, res) => {
+            try {
+                const { id } = req.params;
+                // console.log(id);
+                if (!ObjectId.isValid(id)) {
+                    return res.status(400).send({
+                        message: "Invalid User ID",
+                    });
+                }
 
+                const prompt = await PromptsCollections.find({
+                    UserId: id,
+                }).toArray();
 
+                if (!prompt) {
+                    return res.status(404).send({
+                        message: "User not found",
+                    });
+                }
+
+                res.send(prompt);
+                // console.log(prompt);
+            } catch (error) {
+                console.log(error);
+                res.status(500).send({
+                    message: "Internal Server Error",
+                });
+            }
+        });
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
