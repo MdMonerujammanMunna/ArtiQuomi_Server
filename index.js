@@ -115,7 +115,7 @@ async function run() {
             }
         });
 
-        // Get you created prompts
+        // Get your created prompts
         app.get("/user/getUserPrompts/:id", async (req, res) => {
             try {
                 const { id } = req.params;
@@ -145,6 +145,39 @@ async function run() {
                 });
             }
         });
+        // Get your created reviews
+        app.get("/user/getUserReviews/:id", async (req, res) => {
+            try {
+                const { id } = req.params;
+                // console.log(id);
+                if (!ObjectId.isValid(id)) {
+                    return res.status(400).send({
+                        message: "Invalid User ID",
+                    });
+                }
+
+                const review = await ReviewsCollections.find({
+                    id: id,
+                }).toArray();
+
+                if (!review) {
+                    return res.status(404).send({
+                        message: "User not found",
+                    });
+                }
+
+                res.send(review);
+                // console.log(prompt);
+            } catch (error) {
+                console.log(error);
+                res.status(500).send({
+                    message: "Internal Server Error",
+                });
+            }
+        });
+
+
+        
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
