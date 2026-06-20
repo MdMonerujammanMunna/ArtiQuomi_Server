@@ -29,6 +29,7 @@ async function run() {
         const database = client.db("ArtiQuomi");
         const PromptsCollections = database.collection("Prompts");
         const ReviewsCollections = database.collection("Reviews");
+        const BookMarksCollections = database.collection("BookMarks");
 
         // Get 6 Prompts api for show home page
         app.get('/user/heroPrompts', async (req, res) => {
@@ -175,9 +176,42 @@ async function run() {
                 });
             }
         });
+        // Get your Saved book marks
+        app.get("/user/getUserSavePrompts/:id", async (req, res) => {
+            try {
+                const { id } = req.params;
+                if (!ObjectId.isValid(id)) {
+                    return res.status(400).send({
+                        message: "Invalid User ID",
+                    });
+                }
+
+                const Save = await BookMarksCollections.find({
+                    saveBy: id,
+                }).toArray();
+
+                if (!Save) {
+                    return res.status(404).send({
+                        message: "User not found",
+                    });
+                }
+
+                res.send(Save);
+            } catch (error) {
+                console.log(error);
+                res.status(500).send({
+                    message: "Internal Server Error",
+                });
+            }
+        });
 
 
-        
+        // Save your book mark api call
+        app.post("/user/saveBookMark", async (req, res) => {
+            const bookMark = req.body;
+            const response = await BookMarksCollections.insertOne(bookMark);
+            res.send(response);
+        });
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
