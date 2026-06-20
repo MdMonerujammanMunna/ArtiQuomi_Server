@@ -28,6 +28,7 @@ async function run() {
         await client.connect();
         const database = client.db("ArtiQuomi");
         const PromptsCollections = database.collection("Prompts");
+        const ReviewsCollections = database.collection("Reviews");
 
         // For add Prompts api call
         app.post('/user/addPrompts', async (req, res) => {
@@ -70,6 +71,48 @@ async function run() {
                 });
             }
         });
+
+
+        // Review  section post api call
+        app.post('/user/addReview', async (req, res) => {
+            const review = req.body;
+            const response = await ReviewsCollections.insertOne(review);
+            res.send(response);
+        });
+
+        // get all reviews by user id
+        app.get("/user/getReviewsByPathId/:id", async (req, res) => {
+            try {
+                const { id } = req.params;
+
+                if (!ObjectId.isValid(id)) {
+                    return res.status(400).send({
+                        message: "Invalid Review ID",
+                    });
+                }
+
+                const review = await ReviewsCollections.find({
+                    PathId: id,
+                }).toArray();
+
+                if (!review) {
+                    return res.status(404).send({
+                        message: "Review not found",
+                    });
+                }
+
+                res.send(review);
+                console.log(review);
+            } catch (error) {
+                console.log(error);
+                res.status(500).send({
+                    message: "Internal Server Error",
+                });
+            }
+        });
+
+
+
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
