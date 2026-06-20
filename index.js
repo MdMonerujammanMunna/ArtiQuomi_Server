@@ -213,6 +213,20 @@ async function run() {
             res.send(response);
         });
 
+        // all reviews get for home page
+        app.get("/user/getAllReviews", async (req, res) => {
+            try {
+                const response = await ReviewsCollections.find({}).limit(3).toArray();
+                res.send(response);
+            } catch (error) {
+                console.log(error);
+                res.status(500).send({
+                    message: "Internal Server Error",
+                });
+            }
+        });
+
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
