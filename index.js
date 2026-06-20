@@ -1,9 +1,12 @@
+const dns = require("node:dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = process.env.MONGODB_URI;
 const port = process.env.PORT;
 
@@ -37,7 +40,36 @@ async function run() {
             const response = await PromptsCollections.find({}).toArray();
             res.send(response);
         });
+        // get all prompts by user id
+        app.get("/user/getPromptsByUserId/:id", async (req, res) => {
+            try {
+                const { id } = req.params;
 
+                if (!ObjectId.isValid(id)) {
+                    return res.status(400).send({
+                        message: "Invalid Prompt ID",
+                    });
+                }
+
+                const prompt = await PromptsCollections.findOne({
+                    _id: new ObjectId(id),
+                });
+
+                if (!prompt) {
+                    return res.status(404).send({
+                        message: "Prompt not found",
+                    });
+                }
+
+                res.send(prompt);
+                // console.log(prompt);
+            } catch (error) {
+                console.log(error);
+                res.status(500).send({
+                    message: "Internal Server Error",
+                });
+            }
+        });
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
