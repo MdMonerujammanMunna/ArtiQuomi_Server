@@ -257,6 +257,17 @@ async function run() {
             // console.log(response);
         })
 
+        // Reviews delete api call
+        app.delete("/user/deleteReview", async (req, res) => {
+            const review = req.body;
+            const { id } = review;
+            const query = { _id: new ObjectId(id) };
+            console.log(query);
+            const response = await ReviewsCollections.deleteOne(query);
+            res.send(response);
+            // console.log(response);
+        })
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
