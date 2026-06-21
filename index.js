@@ -30,6 +30,8 @@ async function run() {
         const PromptsCollections = database.collection("Prompts");
         const ReviewsCollections = database.collection("Reviews");
         const BookMarksCollections = database.collection("BookMarks");
+        const PaymentsCollections = database.collection("Payments");
+        const UserCollections = database.collection("user");
 
         // Get 6 Prompts api for show home page
         app.get('/user/heroPrompts', async (req, res) => {
@@ -77,7 +79,6 @@ async function run() {
                 });
             }
         });
-
 
         // Review  section post api call
         app.post('/user/addReview', async (req, res) => {
@@ -267,6 +268,31 @@ async function run() {
             res.send(response);
             // console.log(response);
         })
+
+
+        // Get all payments api call
+        app.post('/user/getPayments', async (req, res) => {
+            const { session_id, customer_id, customer_email } = req.body;
+            const response = await PaymentsCollections.findOne({ session_id });
+            if (response) {
+                return res.status(400).send({
+                    message: "Payment already exist",
+                });
+            }
+            const paymentsUser = await PaymentsCollections.insertOne({
+                session_id,
+                customer_id,
+                customer_email,
+            })
+            // update user role
+            await UserCollections.updateOne({ _id: new ObjectId(customer_id) }, { $set: { plan: "pro" } });
+            res.json({ messages: "payments success" });
+        });
+
+
+
+
+
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
