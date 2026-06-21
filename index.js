@@ -226,6 +226,25 @@ async function run() {
             }
         });
 
+        // Delect prompts form database
+        app.delete("/prompts/Delect", async (req, res) => {
+            const prompts = req.body;
+            const { id } = prompts;
+            const query = { _id: new ObjectId(id) };
+            const response = await PromptsCollections.deleteOne(query);
+            res.send(response);
+            console.log(response);
+        })
+
+
+        // update prompts api call
+        app.patch("/api/prompts", async (req, res) => {
+            const prompts = req.body;
+            const { id } = prompts;
+            const query = { _id: new ObjectId(id) };
+            const response = await PromptsCollections.updateOne(query, { $set: prompts });
+            res.send(response);
+        })
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
