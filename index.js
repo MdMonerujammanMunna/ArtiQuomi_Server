@@ -233,7 +233,7 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const response = await PromptsCollections.deleteOne(query);
             res.send(response);
-            console.log(response);
+            // console.log(response);
         })
 
 
@@ -244,6 +244,17 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const response = await PromptsCollections.updateOne(query, { $set: prompts });
             res.send(response);
+        })
+
+        // Save your book mark remove api call
+        app.delete("/user/deleteSaveBookMark", async (req, res) => {
+            const bookMark = req.body;
+            const { id } = bookMark;
+            const query = { _id: id };
+            console.log(query);
+            const response = await BookMarksCollections.deleteOne(query);
+            res.send(response);
+            // console.log(response);
         })
 
         await client.db("admin").command({ ping: 1 });
