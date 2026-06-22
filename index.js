@@ -7,6 +7,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { jwtVerify, createRemoteJWKSet } = require("jose-cjs");
 const uri = process.env.MONGODB_URI;
 const port = process.env.PORT;
 
@@ -23,6 +24,59 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+
+const JWKS = createRemoteJWKSet(
+    new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
+)
+
+// JWT verification
+const VrifyJWT = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer")) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+    try {
+        const { payload } = await jwtVerify(token, JWKS);
+        req.user = payload;
+        next();
+    } catch (err) {
+        console.log(err);
+        return res.status(401).json({ message: "Invalid token" });
+    }
+
+}
+// User role
+const UserVarify = async (req, res, next) => {
+    const user = req.user;
+    if (user.role !== "User") {
+        return res.status(403).json({ message: "Forbidden" });
+    }
+    next();
+}
+
+// Creator role
+const CreatorVarify = async (req, res, next) => {
+    const user = req.user;
+    if (user.role !== "Creator") {
+        return res.status(403).json({ message: "Forbidden" });
+    }
+    next();
+}
+
+// Admin role
+const AdminVarify = async (req, res, next) => {
+    const user = req.user;
+    if (user.role !== "Admin") {
+        return res.status(403).json({ message: "Forbidden" });
+    }
+    next();
+}
 async function run() {
     try {
         await client.connect();
@@ -39,7 +93,7 @@ async function run() {
             res.send(response);
         })
         // For add Prompts api call
-        app.post('/user/addPrompts', async (req, res) => {
+        app.post('/user/addPrompts', VrifyJWT, UserVarify, async (req, res) => {
             const prompts = req.body;
             const response = await PromptsCollections.insertOne(prompts);
             res.send(response);
@@ -196,7 +250,6 @@ async function run() {
                         message: "User not found",
                     });
                 }
-
                 res.send(Save);
             } catch (error) {
                 console.log(error);
@@ -269,7 +322,6 @@ async function run() {
             // console.log(response);
         })
 
-
         // Get all payments api call
         app.post('/user/getPayments', async (req, res) => {
             const { session_id, customer_id, customer_email } = req.body;
@@ -290,7 +342,21 @@ async function run() {
         });
 
 
+        // copy count api call
+        app.patch("/user/copyCount/:id", async (req, res) => {
+            const { id } = req.params;
+            const query = { _id: new ObjectId(id) };
+            const response = await PromptsCollections.updateOne(query, { $inc: { copyCount: 1 } });
+            res.send(response);
+        })
 
+        //    update save count
+        app.patch("/user/saveCount/:id", async (req, res) => {
+            const { id } = req.params;
+            const query = { _id: new ObjectId(id) };
+            const response = await PromptsCollections.updateOne(query, { $inc: { bookmarkCount: 1 } });
+            res.send(response);
+        })
 
 
 
