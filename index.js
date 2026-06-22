@@ -85,6 +85,7 @@ async function run() {
         const ReviewsCollections = database.collection("Reviews");
         const BookMarksCollections = database.collection("BookMarks");
         const PaymentsCollections = database.collection("Payments");
+        const ReportsCollections = database.collection("Reports");
         const UserCollections = database.collection("user");
 
         // Get 6 Prompts api for show home page
@@ -234,26 +235,17 @@ async function run() {
         // Get your Saved book marks
         app.get("/user/getUserSavePrompts/:id", async (req, res) => {
             try {
-                const { id } = req.params;
-                if (!ObjectId.isValid(id)) {
-                    return res.status(400).send({
-                        message: "Invalid User ID",
-                    });
-                }
+                const userId = req.params.id;
 
-                const Save = await BookMarksCollections.find({
-                    saveBy: id,
+                const save = await BookMarksCollections.find({
+                    userId: userId,
                 }).toArray();
 
-                if (!Save) {
-                    return res.status(404).send({
-                        message: "User not found",
-                    });
-                }
-                res.send(Save);
+                return res.send(save);
+
             } catch (error) {
                 console.log(error);
-                res.status(500).send({
+                return res.status(500).send({
                     message: "Internal Server Error",
                 });
             }
@@ -261,9 +253,22 @@ async function run() {
 
 
         // Save your book mark api call
-        app.post("/user/saveBookMark", async (req, res) => {
+        app.post("/user/saveBookMark", VrifyJWT, UserVarify, async (req, res) => {
             const bookMark = req.body;
+
+            const exists = await BookMarksCollections.findOne({
+                promptId: bookMark.promptId,
+                userId: bookMark.userId,
+            });
+
+            if (exists) {
+                return res.status(400).send({
+                    message: "Prompt already saved."
+                });
+            }
+
             const response = await BookMarksCollections.insertOne(bookMark);
+
             res.send(response);
         });
 
@@ -281,7 +286,7 @@ async function run() {
         });
 
         // Delect prompts form database
-        app.delete("/prompts/Delect", async (req, res) => {
+        app.delete("/prompts/Delect", VrifyJWT, UserVarify, async (req, res) => {
             const prompts = req.body;
             const { id } = prompts;
             const query = { _id: new ObjectId(id) };
@@ -301,11 +306,11 @@ async function run() {
         })
 
         // Save your book mark remove api call
-        app.delete("/user/deleteSaveBookMark", async (req, res) => {
+        app.delete("/user/deleteSaveBookMark", VrifyJWT, UserVarify, async (req, res) => {
             const bookMark = req.body;
             const { id } = bookMark;
-            const query = { _id: id };
-            console.log(query);
+            const query = { promptId: id };
+            // console.log(query);
             const response = await BookMarksCollections.deleteOne(query);
             res.send(response);
             // console.log(response);
@@ -357,7 +362,12 @@ async function run() {
             const response = await PromptsCollections.updateOne(query, { $inc: { bookmarkCount: 1 } });
             res.send(response);
         })
-
+        // Report prompts api call VrifyJWT, UserVarify,
+        app.post("/user/reportPrompts", async (req, res) => {
+            const prompts = req.body;
+            const response = await ReportsCollections.insertOne(prompts);
+            res.send(response); n
+        });
 
 
         await client.db("admin").command({ ping: 1 });
