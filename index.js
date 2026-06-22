@@ -90,11 +90,17 @@ async function run() {
 
         // Get 6 Prompts api for show home page
         app.get('/user/heroPrompts', async (req, res) => {
-            const response = await PromptsCollections.find({}).limit(6).toArray();
+            const response = await PromptsCollections.find({ status: "approved" }).limit(6).toArray();
             res.send(response);
         })
         // For add Prompts api call
         app.post('/user/addPrompts', VrifyJWT, UserVarify, async (req, res) => {
+            const prompts = req.body;
+            const response = await PromptsCollections.insertOne(prompts);
+            res.send(response);
+        });
+        // For add Prompts api call Creator
+        app.post('/creator/addPrompts', VrifyJWT, CreatorVarify, async (req, res) => {
             const prompts = req.body;
             const response = await PromptsCollections.insertOne(prompts);
             res.send(response);
