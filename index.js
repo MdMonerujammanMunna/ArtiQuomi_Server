@@ -87,6 +87,29 @@ async function run() {
         const PaymentsCollections = database.collection("Payments");
         const ReportsCollections = database.collection("Reports");
         const UserCollections = database.collection("user");
+        
+        // Creator Promes testiong
+        app.post("/stats", async (req, res) => {
+            const { userId } = req.body;
+            // console.log(userId);
+            const result = await PromptsCollections.aggregate([
+                {
+                    $match: {
+                        UserId: userId
+                    }
+                },
+
+                {
+                    $group: {
+                        _id: null,
+                        copyCount: { $sum: "$copyCount" },
+                        bookmarkCount: { $sum: "$bookmarkCount" }
+                    }
+                }
+            ]).toArray();
+
+            res.send(result[0] || { copyCount: 0, bookmarkCount: 0 });
+        });
 
         // Get 6 Prompts api for show home page
         app.get('/user/heroPrompts', async (req, res) => {
@@ -259,7 +282,7 @@ async function run() {
 
 
         // Save your book mark api call
-        app.post("/user/saveBookMark", VrifyJWT, UserVarify, async (req, res) => {
+        app.post("/user/saveBookMark", VrifyJWT, async (req, res) => {
             const bookMark = req.body;
 
             const exists = await BookMarksCollections.findOne({
