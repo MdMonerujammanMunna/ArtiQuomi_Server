@@ -53,7 +53,8 @@ const VrifyJWT = async (req, res, next) => {
 }
 // User role
 const UserVarify = async (req, res, next) => {
-    const user = req.user;
+    const user = req?.user;
+    console.log(user)
     if (user.role !== "User") {
         return res.status(403).json({ message: "Forbidden" });
     }
@@ -71,7 +72,8 @@ const CreatorVarify = async (req, res, next) => {
 
 // Admin role
 const AdminVarify = async (req, res, next) => {
-    const user = req.user;
+    const user = req?.user;
+    console.log(user)
     if (user.role !== "Admin") {
         return res.status(403).json({ message: "Forbidden" });
     }
@@ -87,7 +89,7 @@ async function run() {
         const PaymentsCollections = database.collection("Payments");
         const ReportsCollections = database.collection("Reports");
         const UserCollections = database.collection("user");
-        
+
         // Creator Promes testiong
         app.post("/stats", async (req, res) => {
             const { userId } = req.body;
@@ -398,6 +400,16 @@ async function run() {
             res.send(response); n
         });
 
+        // Delect prompts form database
+        app.delete("/Admin/DelectDatbase", async (req, res) => {
+            const prompts = req.body;
+            const { id } = prompts;
+            const query = { _id: new ObjectId(id) };
+            // console.log(query)
+            const response = await PromptsCollections.deleteOne(query);
+            res.send(response);
+            // console.log(response);
+        })
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
