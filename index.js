@@ -115,7 +115,7 @@ async function run() {
 
         // Get 6 Prompts api for show home page
         app.get('/user/heroPrompts', async (req, res) => {
-            const response = await PromptsCollections.find({ status: "approved" }).limit(6).toArray();
+            const response = await PromptsCollections.find({ status: "Approved" }).limit(6).toArray();
             res.send(response);
         })
         // For add Prompts api call
@@ -410,6 +410,25 @@ async function run() {
             res.send(response);
             // console.log(response);
         })
+        // Update Prompt Admin
+        app.patch("/Admin/UpdatePrompt", async (req, res) => {
+            // console.log(req.body)
+            const { srcId, status } = req.body;
+            // console.log(status)
+            const query = { _id: new ObjectId(srcId) };
+            const update = {
+                $set: {
+                    status,
+                },
+            };
+
+            const response = await PromptsCollections.updateOne(query, update);
+
+            res.send(response);
+        });
+
+
+
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
