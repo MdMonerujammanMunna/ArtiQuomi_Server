@@ -427,6 +427,19 @@ async function run() {
             res.send(response);
         });
 
+        // get user payment
+        app.get("/user/getPayments", async (req, res) => {
+            const response = await PaymentsCollections.find().toArray()
+            res.send(response)
+        })
+        // Delete payments
+        app.delete("/Admin/DelectePaymet", async (req, res) => {
+            const { id } = req.body;
+            const query = { session_id: (id) };
+            // console.log(query);
+            const response = await PaymentsCollections.deleteOne(query);
+            res.send(response);
+        })
 
 
 
