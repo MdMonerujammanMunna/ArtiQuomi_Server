@@ -43,41 +43,39 @@ const VrifyJWT = async (req, res, next) => {
     }
     try {
         const { payload } = await jwtVerify(token, JWKS);
-        req.user = payload;
+        req.user = { payload };
         next();
     } catch (err) {
         console.log(err);
         return res.status(401).json({ message: "Invalid token" });
     }
-
-}
-// User role
-const UserVarify = async (req, res, next) => {
-    const user = req?.user;
-    console.log(user)
-    if (user.role !== "User") {
-        return res.status(403).json({ message: "Forbidden" });
+    const UserVarify = async (req, res, next) => {
+        const user = req?.user;
+        console.log(user)
+        if (user.role !== "User") {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+        next();
     }
-    next();
-}
 
-// Creator role
-const CreatorVarify = async (req, res, next) => {
-    const user = req.user;
-    if (user.role !== "Creator") {
-        return res.status(403).json({ message: "Forbidden" });
+    // Creator role
+    const CreatorVarify = async (req, res, next) => {
+        const user = req.user;
+        if (user.role !== "Creator") {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+        next();
     }
-    next();
-}
 
-// Admin role
-const AdminVarify = async (req, res, next) => {
-    const user = req?.user;
-    console.log(user)
-    if (user.role !== "Admin") {
-        return res.status(403).json({ message: "Forbidden" });
+    // Admin role
+    const AdminVarify = async (req, res, next) => {
+        const user = req?.user;
+        console.log(user)
+        if (user.role !== "Admin") {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+        next();
     }
-    next();
 }
 async function run() {
     try {
@@ -112,20 +110,42 @@ async function run() {
 
             res.send(result[0] || { copyCount: 0, bookmarkCount: 0 });
         });
+        app.get("/stats/Admin", async (req, res) => {
+            const [prompts, promptsTotal, reviews] = await Promise.all([
+                PromptsCollections.aggregate([
+                    {
+                        $group: {
+                            _id: null,
+                            copyCount: { $sum: "$copyCount" },
+                        },
+                    },
+                ]).toArray(),
 
+                PromptsCollections.countDocuments({
+                    status: "Approved"
+                }),
+                ReviewsCollections.countDocuments(),
+            ]);
+
+            res.send({
+                copyCount: prompts[0]?.copyCount || 0,
+                totalReviews: reviews,
+                totalPrompts: promptsTotal,
+            });
+        });
         // Get 6 Prompts api for show home page
         app.get('/user/heroPrompts', async (req, res) => {
             const response = await PromptsCollections.find({ status: "Approved" }).limit(6).toArray();
             res.send(response);
         })
         // For add Prompts api call
-        app.post('/user/addPrompts', VrifyJWT, UserVarify, async (req, res) => {
+        app.post('/user/addPrompts', VrifyJWT, async (req, res) => {
             const prompts = req.body;
             const response = await PromptsCollections.insertOne(prompts);
             res.send(response);
         });
         // For add Prompts api call Creator
-        app.post('/creator/addPrompts', VrifyJWT, CreatorVarify, async (req, res) => {
+        app.post('/creator/addPrompts', VrifyJWT, async (req, res) => {
             const prompts = req.body;
             const response = await PromptsCollections.insertOne(prompts);
             res.send(response);
@@ -317,7 +337,7 @@ async function run() {
         });
 
         // Delect prompts form database
-        app.delete("/prompts/Delect", VrifyJWT, UserVarify, async (req, res) => {
+        app.delete("/prompts/Delect", VrifyJWT, async (req, res) => {
             const prompts = req.body;
             const { id } = prompts;
             const query = { _id: new ObjectId(id) };
@@ -337,7 +357,7 @@ async function run() {
         })
 
         // Save your book mark remove api call
-        app.delete("/user/deleteSaveBookMark", VrifyJWT, UserVarify, async (req, res) => {
+        app.delete("/user/deleteSaveBookMark", VrifyJWT, async (req, res) => {
             const bookMark = req.body;
             const { id } = bookMark;
             const query = { promptId: id };
@@ -393,7 +413,7 @@ async function run() {
             const response = await PromptsCollections.updateOne(query, { $inc: { bookmarkCount: 1 } });
             res.send(response);
         })
-        // Report prompts api call VrifyJWT, UserVarify,
+        // Report prompts api call VrifyJWT,
         app.post("/user/reportPrompts", async (req, res) => {
             const prompts = req.body;
             const response = await ReportsCollections.insertOne(prompts);
