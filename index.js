@@ -467,6 +467,21 @@ async function run() {
             res.send(response);
         })
 
+        // Get all reports
+        app.get("/user/getReports", async (req, res) => {
+            const response = await ReportsCollections.find({}).toArray();
+            res.send(response);
+            // console.log(response);
+        });
+        // Delete repots on id:-
+        app.delete("/Admin/deletedReports", async (req, res) => {
+            const { id } = req.body;
+            // console.log(id);
+            const query = { _id: new ObjectId(id) };
+            const response = await ReportsCollections.deleteOne(query);
+            res.send(response);
+        })
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
