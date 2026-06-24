@@ -352,7 +352,7 @@ async function run() {
             const review = req.body;
             const { id } = review;
             const query = { _id: new ObjectId(id) };
-            console.log(query);
+            // console.log(query);
             const response = await ReviewsCollections.deleteOne(query);
             res.send(response);
             // console.log(response);
@@ -397,7 +397,7 @@ async function run() {
         app.post("/user/reportPrompts", async (req, res) => {
             const prompts = req.body;
             const response = await ReportsCollections.insertOne(prompts);
-            res.send(response); n
+            res.send(response);
         });
 
         // Delect prompts form database
@@ -440,7 +440,7 @@ async function run() {
             const response = await PaymentsCollections.deleteOne(query);
             res.send(response);
         })
-        
+
         // Get all Prompts api call
         app.get('/Admin/getAllUsers', async (req, res) => {
             const response = await UserCollections.find({}).toArray();
@@ -452,6 +452,18 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             // console.log(query);
             const response = await UserCollections.deleteOne(query);
+            res.send(response);
+        })
+        // Update user role
+        app.patch("/Admin/UpdateUser", async (req, res) => {
+            const { id, role } = req.body;
+            const query = { _id: new ObjectId(id) };
+            const update = {
+                $set: {
+                    role,
+                },
+            };
+            const response = await UserCollections.updateOne(query, update);
             res.send(response);
         })
 
