@@ -440,8 +440,20 @@ async function run() {
             const response = await PaymentsCollections.deleteOne(query);
             res.send(response);
         })
-
-
+        
+        // Get all Prompts api call
+        app.get('/Admin/getAllUsers', async (req, res) => {
+            const response = await UserCollections.find({}).toArray();
+            res.send(response);
+        });
+        // Delete User
+        app.delete("/Admin/DeleteUser", async (req, res) => {
+            const { id } = req.body;
+            const query = { _id: new ObjectId(id) };
+            // console.log(query);
+            const response = await UserCollections.deleteOne(query);
+            res.send(response);
+        })
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
