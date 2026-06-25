@@ -79,7 +79,7 @@ const VrifyJWT = async (req, res, next) => {
 }
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
         const database = client.db("ArtiQuomi");
         const PromptsCollections = database.collection("Prompts");
         const ReviewsCollections = database.collection("Reviews");
@@ -502,7 +502,7 @@ async function run() {
             res.send(response);
         })
 
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });git
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // await client.close();
