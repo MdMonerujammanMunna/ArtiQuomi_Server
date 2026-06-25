@@ -83,7 +83,7 @@ client.connect(() => {
     console.log("Connected to MongoDB");
 }).catch(console.dir);
 // async function run() {
-//     try {
+// try {
 // await client.connect();
 const database = client.db("ArtiQuomi");
 const PromptsCollections = database.collection("Prompts");
@@ -452,8 +452,8 @@ app.patch("/Admin/UpdatePrompt", async (req, res) => {
     res.send(response);
 });
 
-// get user payment
-app.get("/user/getPayments", async (req, res) => {
+// get Admin payment
+app.get("/Admin/getPayments", async (req, res) => {
     const response = await PaymentsCollections.find().toArray()
     res.send(response)
 })
@@ -507,7 +507,7 @@ app.delete("/Admin/deletedReports", async (req, res) => {
     res.send(response);
 })
 
-// await client.db("admin").command({ ping: 1 });git
+//         await client.db("admin").command({ ping: 1 }); git
 //         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 //     } finally {
 //         // await client.close();
